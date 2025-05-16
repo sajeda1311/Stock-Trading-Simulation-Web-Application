@@ -27,7 +27,7 @@ export const login = async (req, res) => {
 
     try {
         // Verify reCAPTCHA token with Google
-        const secretKey = '6Lfag5EqAAAAADMGsGtXEzvgdRWDXSberKGnpJrX';
+        const secretKey = '';
         const verificationUrl = `https://www.google.com/recaptcha/api/siteverify`;
 
         const response = await axios.post(verificationUrl, null, {
