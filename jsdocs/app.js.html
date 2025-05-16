@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: app.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: app.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import express from 'express';
+import { MongoClient } from 'mongodb';
+import path from 'path';
+import session from 'express-session';
+import validator from 'validator';
+import { fileURLToPath } from 'url';
+
+import transactionRoutes from './routes/transactionRoutes.js';
+import portfolioRoutes from './routes/portfolioRoutes.js';
+import render from './templates.mjs';
+import { authenticate, createUser, findUser } from './playerRegistration.mjs';
+
+import axios from 'axios';
+
+// Define __dirname for ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = 3000;
+
+/**
+ * Middleware for parsing JSON and URL-encoded data.
+ */
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Static files
+app.use(express.static(path.join(process.cwd(), 'public')));
+
+/**
+ * Session Middleware to manage user sessions and cookies.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @param {Function} next - The next middleware function
+ */
+app.use(session({
+  secret: 'gamekey', // replace with a secure key in production
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false, 
+      maxAge: 30 * 60 * 1000 // Session expires after 30 minutes
+  } // Set secure to true in production when using HTTPS
+}));
+
+// MongoDB Connection
+const mongoURI = 'mongodb://127.0.0.1:27017';
+const client = new MongoClient(mongoURI);
+
+let db;
+
+/**
+ * Connects to the MongoDB database.
+ * @returns {Promise&lt;void>} - A promise that resolves when the database connection is successful.
+ */
+async function connectDB() {
+  try {
+    await client.connect();
+    db = client.db('SoftProj');
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+  }
+}
+
+connectDB();
+
+// Set up EJS for rendering views
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'public')); // Make sure this path is correct
+
+// Static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Use the transaction routes
+app.use('/api/transactions', transactionRoutes);
+
+// Use the portfolio routes
+app.use('/api', portfolioRoutes); 
+
+/**
+ * Route to render today's stock tickers.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/tickers', (req, res) => {
+    res.render('tickers'); // Render the tickers EJS page
+});
+
+/**
+ * Route for buying/selling stocks.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/buy-sell', (req, res) => {
+    console.log(req.session.username);
+    res.render('buy-sell', { username: req.session.username });
+});
+
+/**
+ * Route for showing the user's portfolio.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/portfolio', (req, res) => {
+    res.render('portfolio', { username: req.session.username });
+});
+
+// API Key for fetching stock tickers from Polygon.io API
+const API_KEY = 'eegavq5RrAwcZEvx4E__WGfRTMT7jOcc';
+
+/**
+ * Endpoint to fetch stock tickers and their current values.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/api/tickers', async (req, res) => {
+  try {
+    // Static list of tickers
+    const tickersList = [
+      { symbol: 'AAPL', name: 'Apple Inc.', type: 'Tech' },
+      { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'Tech' },
+      { symbol: 'AMZN', name: 'Amazon.com Inc.', type: 'E-commerce' },
+      { symbol: 'TSLA', name: 'Tesla Inc.', type: 'Automotive' },
+      { symbol: 'MSFT', name: 'Microsoft Corp.', type: 'Tech' },
+      { symbol: 'META', name: 'Meta Platforms Inc.', type: 'Tech' },
+      { symbol: 'NFLX', name: 'Netflix Inc.', type: 'Entertainment' },
+      { symbol: 'NVDA', name: 'NVIDIA Corporation', type: 'Semiconductors' },
+      { symbol: 'DIS', name: 'The Walt Disney Company', type: 'Entertainment' },
+      { symbol: 'V', name: 'Visa Inc.', type: 'Financial' }
+    ];
+
+    // Array to hold tickers with their current values
+    const tickersWithCurrentValue = [];
+
+    // Loop through each ticker to fetch its current value
+    for (let ticker of tickersList) {
+      const currentValueResponse = await axios.get(`https://api.polygon.io/v2/last/trade/${ticker.symbol}`, {
+        params: { apiKey: API_KEY },
+      });
+
+      const currentValue = currentValueResponse.data.results?.p || null; // Extract price if available
+
+      tickersWithCurrentValue.push({
+        symbol: ticker.symbol,
+        name: ticker.name,
+        type: ticker.type,
+        currentValue: currentValue,
+      });
+    }
+
+    // Send the tickers with their current values to the frontend
+    res.json(tickersWithCurrentValue);
+  } catch (error) {
+    console.error('Error fetching tickers:', error);
+    res.status(500).json({ error: 'Failed to fetch tickers' });
+  }
+});
+
+/**
+ * Redirect to login page by default.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/', (req, res) => {
+  res.redirect('/login');
+});
+
+/**
+ * Route for the login page.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/login', async (req, res) => {
+  const html = await render('login', { username: "", message: "" });
+  res.send(html);
+});
+
+/**
+ * POST route for logging in.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.post('/login', async (req, res) => {
+  const { username_input: username, pass_input: password } = req.body;
+
+  const userExists = await authenticate(username, password);
+  if (userExists) {
+    req.session.username = username;
+    req.session.playerId = userExists._id;
+    res.redirect('/dashboard');
+  } else {
+    const html = await render('login', { username, message: "Wrong username or password!" });
+    res.send(html);
+  }
+});
+
+/**
+ * Route for the registration page.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/register', async (req, res) => {
+  const html = await render('register', { name: "", lastname: "", username: "", email: "", message: "" });
+  res.send(html);
+});
+
+/**
+ * POST route for user registration.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.post('/register', async (req, res) => {
+  const { name_input: name, lastname_input: lastname, username_input: username, email_input: email, password_input: pass, repeat_pass: rep_pass } = req.body;
+  let message = "";
+
+  if (!validator.isEmail(email)) {
+    message = "Bad email address";
+  } else if (pass !== rep_pass) {
+    message = "Passwords do not match!";
+  } else if (await findUser(username)) {
+    message = "Username already exists!";
+  }
+
+  if (message) {
+    const html = await render('register', { name, lastname, username, email, message });
+    res.send(html);
+  } else {
+    await createUser({ name, lastname, username, password: pass, email });
+    req.session.username = username;
+    const html = await render('dashboard', { username, message: `Welcome, ${username}!` });
+    res.send(html);
+  }
+});
+
+/**
+ * Route for the dashboard page.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/dashboard', async (req, res) => {
+  if (!req.session.username) {
+    return res.redirect('/login');
+  }
+
+  const username = req.session.username;
+  const playerId = req.session.playerId;
+  const message = `Welcome, ${username}!`;
+
+  const html = await render('dashboard', { username, playerId, message });
+  res.send(html);
+});
+
+/**
+ * Logout route to clear session and cookies.
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).send("Error logging out");
+    }
+    res.clearCookie('connect.sid');
+    res.redirect('/login'); // Redirect to login after logout
+  });
+});
+
+export default app;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#after">after</a></li><li><a href="global.html#before">before</a></li><li><a href="global.html#buyStock">buyStock</a></li><li><a href="global.html#connectDB">connectDB</a></li><li><a href="global.html#connectToDB">connectToDB</a></li><li><a href="global.html#deleteTransaction">deleteTransaction</a></li><li><a href="global.html#findTransactions">findTransactions</a></li><li><a href="global.html#getCurrentHoldings">getCurrentHoldings</a></li><li><a href="global.html#getPortfolio">getPortfolio</a></li><li><a href="global.html#getTransactionsCollection">getTransactionsCollection</a></li><li><a href="global.html#insertTransaction">insertTransaction</a></li><li><a href="global.html#sellStock">sellStock</a></li><li><a href="global.html#updateTransaction">updateTransaction</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Nov 06 2024 18:01:10 GMT-0330 (Newfoundland Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

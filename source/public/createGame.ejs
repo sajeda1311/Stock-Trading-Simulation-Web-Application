@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Game</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Create New Game</h1>
+        </header>
+        <div class="user_profile">
+            <form action="/player/logout" method="get">
+                <button type="submit" class="btn btn_red">Logout</button>
+            </form>
+        </div>
+        <div class="section-card">
+            <form action="/player/createGame" method="post" class="form-container admin-form-container">
+                <h2>Create a Game</h2>
+
+                <div class="form-group">
+                    <label for="gameName">Name of the game:</label>
+                    <input type="text" id="gameName" name="gameName" class="admin-select" placeholder="Enter game name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="players">Choose players:</label>
+                    <select name="players" id="players" class="admin-select" multiple required>
+                        <% for (var i = 0; i < players.length; i++) { %>
+                            <option value="<%= players[i].username %>"><%= players[i].username %></option>
+                        <% } %>
+                    </select>
+                    <p class="admin-message message">Hold Ctrl (Windows) or Command (Mac) to select multiple players.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="endTime">Ending time (date and time):</label>
+                    <input type="datetime-local" id="endTime" name="endTime" min="<%= minDate %>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="funds">Starting cash funds:</label>
+                    <input type="number" class="admin-select" id="funds" name="funds" placeholder="Enter starting funds" min="0" required>
+                <div class="form-group">
+                    <label class="form-check-label" for="flexCheckDefault">Challenge Mode (uses the last 2 years of data):</label>
+                    <input class="form-check-input" type="checkbox" name="ch_mode" value="ch_mode" id="flexCheckDefault"> 
+                </div> 
+                </div>
+
+                <div class="form-group admin-btn">
+                    <button type="submit" class="btn btn_green">Create Game</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

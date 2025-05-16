@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Admin Dashboard</h1>
+        </header>
+        <div class="user_profile">
+            <form action="/player/logout" method="get">
+                <button type="submit" class="btn btn_red">Logout</button>
+            </form>
+        </div>
+
+        <section class="section-card trade">
+            <form action="/player/newgame" method="get">
+                <button type="submit" class="btn btn_blue">New Game</button>
+            </form>
+            <!-- Current games -->
+            <h2>Active Games</h2>
+            <table>
+                <thead>
+                    <tr>
+                      <th scope="col">Name</th>
+                      <th scope="col">Created At</th>
+                      <th scope="col">Players</th>
+                      <th scope="col">Ending At</th>
+                      <th scope="col">Mode</th>
+                      <th scope="col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% for (var i = 0; i < activeGames.length; i++) { %>
+                        <tr>                    
+                            <td><%= activeGames[i].name %></td>
+                            <td><%= activeGames[i].createdAt %></td>
+                            <td><%= activeGames[i].players %></td>
+                            <td><%= activeGames[i].endingAt %></td>
+                            <% if(activeGames[i].mode){ %>
+                                <td>Challenge Mode</td>
+                            <% } else{ %>
+                                <td>Normal Game</td>
+                            <% } %>
+                            <td><a>End game</a></td>
+                        </tr>
+                    <% } %>
+                  </tbody>
+            </table>
+            <!-- Past games -->
+            <br><br><br>
+            <h2>Past Games</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Ended At</th>
+                        <th scope="col">Players</th>
+                        <th scope="col">Winner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for (var i = 0; i < expiredGames.length; i++) { %>
+                        <tr>                    
+                            <td><%= expiredGames[i].name %></td>
+                            <td><%= new Date(expiredGames[i].endedAt).toLocaleString() %></td>
+                            <td><%= expiredGames[i].players %></td>
+                            <td><%= expiredGames[i].winner %></td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            
+        </section>
+
+        <section class="section-card trade">
+            <h2>All Portfolios</h2>
+            <div id="portfolio-summary">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Owner</th>
+                            <th scope="col">Portfolio Name</th>
+                            <th scope="col">Funds</th>
+                            <th scope="col">Created At</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portfolio-table-body">
+                        <!-- Rows will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+         <!-- Users Section -->
+         <section class="section-card trade">
+            <h2>Users</h2>
+            <div id="portfolio-summary">
+                <table>
+                    <thead>
+                        <tr>
+                          <th scope="col">Name</th>
+                          <th scope="col">Last Name</th>
+                          <th scope="col">Username</th>
+                          <th scope="col">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% for (var i = 0; i < users.length; i++) { %>
+                            <tr>
+                        
+                                <td><%= users[i].name %></td>
+                                <td><%= users[i].lastName %></td>
+                                <td><%= users[i].username %></td>
+                                <form action="switchAdminRights/<%= users[i].username %>" method="post">
+                                    <% if(users[i].is_admin){ %>
+                                        <td>Already an Admin</td>
+                                      <% } else{ %>  
+                                        <td><button type="submit" name="your_name" value="your_value" class="btn-link">Grant Admin Rights</button></td>
+                                     <% } %>
+                                </form>
+                            </tr>
+                        <% } %>
+                      </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+</body>
+
+<script>
+    // Function to populate the portfolio table
+    async function populatePortfolioTable() {
+        try {
+            // Fetch portfolios from the server
+            const response = await fetch('/player/all-portfolios'); // Adjust endpoint as per your route
+            if (!response.ok) {
+                throw new Error('Failed to fetch portfolios');
+            }
+
+            const portfolios = await response.json();
+            const tbody = document.getElementById('portfolio-table-body');
+
+            // Clear existing rows
+            tbody.innerHTML = '';
+
+            // Populate the table with portfolio data
+            portfolios.forEach(portfolio => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${portfolio.owner}</td>
+                    <td>${portfolio.name}</td>
+                    <td>${portfolio.funds}</td>
+                    <td>${new Date(portfolio.createdAt).toLocaleString()}</td>
+                    <td>
+                    <a href="/player/player-investments/${portfolio.id}" class="btn btn-green">View Investments</a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error fetching portfolios:', error);
+        }
+    }
+
+    // Run the function once the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        populatePortfolioTable(); // Populate the portfolio table after the page loads
+    });
+</script>
+
+</html>

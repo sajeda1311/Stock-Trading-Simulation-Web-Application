@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Investments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .sold-table {
+            background-color: #fff7f7;
+        }
+        .active-table {
+            background-color: #f7fff7;
+        }
+    </style>
+</head>
+<body>
+    <h1>Player Investments</h1>
+    <h2>Portfolio: <%= portfolio.owner %></h2>
+
+    <h3>Active Holdings</h3>
+    <table class="active-table">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Value at Purchase</th>
+                <th>Purchased At</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% stocks.filter(stock => stock.enabled).forEach(stock => { %>
+                <tr>
+                    <td><%= stock.symbol %></td>
+                    <td><%= stock.name %></td>
+                    <td><%= stock.quantity %></td>
+                    <td>$<%= stock.valueAtPurchase %></td>
+                    <td><%= new Date(stock.purchasedAt).toLocaleDateString() %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <h3>Sold Stocks</h3>
+    <table class="sold-table">
+        <thead>
+            <tr>
+                <th>Stock</th>
+                <th>Amount</th>
+                <th>Total Sold</th>
+                <th>Type</th>
+                <th>Sold At</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% transactions.filter(transaction => transaction.type === 'sell').forEach(transaction => { %>
+                <tr>
+                    <td><%= transaction.stock %></td>
+                    <td><%= transaction.amount %></td>
+                    <td>$<%= transaction.totalSold %></td>
+                    <td><%= transaction.type %></td>
+                    <td><%= new Date(transaction.date).toLocaleString() %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <a href="/player/admindashboard">Back to Dashboard</a>
+</body>
+</html>

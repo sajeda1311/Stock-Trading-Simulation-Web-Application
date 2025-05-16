@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Stock Trading Dashboard</h1>
+        </header>
+        <div class="user_profile">
+            <h2>Welcome, <%= username %>
+            </h2>
+            <form action="/player/logout" method="get">
+                <button type="submit" class="btn btn_red">Logout</button>
+            </form>
+        </div>
+
+        <!-- Watchlist Section -->
+        <section class="section-card portfolio">
+            <h2>Latest Stock Watchlist</h2>
+            <div id="portfolio-summary">
+                <button onclick="window.location.href='/tickers'" class="btn btn_blue">View Today's Stock
+                    Tickers</button>
+            </div>
+        </section>
+
+        <!-- Trade Section -->
+        <section class="section-card trade">
+            <h2>Trade Stocks</h2>
+            <div id="portfolio-summary">
+                <button onclick="window.location.href='/buy-sell'" class="btn btn_red">Manage Stocks</button>
+            </div>
+        </section>
+
+        <!-- Portfolio Section -->
+        <section class="section-card transactions">
+            <h2>Portfolio Summary</h2>
+            <div id="transactions-list">
+                <button onclick="window.location.href='/portfolio'" class="btn btn_green">View Portfolio</button>
+            </div>
+        </section>
+    </div>
+</body>
+
+</html>

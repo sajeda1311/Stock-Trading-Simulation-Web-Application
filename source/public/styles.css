@@ -1,0 +1,390 @@
+/* General Reset and Styling */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Styling of Login and Registration page */
+
+/* Ensure the form is aligned and styled consistently */
+.form-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* .form-container {
+    background-color: #fff;
+    padding: 2em;
+    border-radius: 8px;
+    width: 300px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+} */
+
+/* Style form groups */
+.form-group {
+    margin-bottom: 15px;
+}
+
+/* Adjust the alignment of the reCAPTCHA widget */
+.g-recaptcha {
+    margin: 15px 0;
+    transform: scale(0.95); /* Adjust scale if it's too large */
+    transform-origin: 0 0;
+}
+
+/* Ensure form submission button is styled properly */
+.btn_login,
+.btn {
+    width: 100%;
+    padding: 0.75em;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+
+
+.btn_login:hover {
+    background-color: #0056b3;
+}
+
+/* Align messages and links */
+.message {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.admin-form-container {
+    width: auto !important;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 1em;
+    text-align: center;
+}
+
+label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 0.5em;
+    display: block;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 0.75em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.message {
+    font-size: 14px;
+    text-align: center;
+    color: #555;
+}
+
+.admin-message {
+    text-align: left !important;
+}
+
+.message a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.dashboard-container {
+    width: 100%;
+    max-width: 1000px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    font-size: 28px;
+    color: #333;
+}
+
+.user_profile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #e0f7fa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.user_profile h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #007bff;
+}
+
+.user_profile .btn {
+    padding: 8px 12px;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.user_profile .btn:hover {
+    background-color: #c82333;
+}
+
+#portfolio-summary,
+#transactions-list {
+    text-align: center;
+}
+
+/* Section Styling */
+.section-card {
+    background-color: #fafafa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-card h2 {
+    font-size: 22px;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+/* Button Styles */
+.btn {
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center;
+    width: 100%;
+    max-width: 200px;
+    margin: 5px 0;
+}
+
+.btn_blue {
+    background-color: #007bff;
+}
+
+.btn_blue:hover {
+    background-color: #0056b3;
+}
+
+.btn_red {
+    background-color: #dc3545;
+}
+
+.btn_red:hover {
+    background-color: #c82333;
+}
+
+.btn_green {
+    background-color: #28a745;
+}
+
+.btn_green:hover {
+    background-color: #218838;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .user_profile {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* Styling of Tickers page */
+
+/* Styling for the table container */
+.tickers_container,
+.portfolio_container,
+.manage_stocks_container {
+    font-family: Arial, sans-serif;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+#tickerList {
+    width: 80%;
+    max-width: 900px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Styling for the table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eaeaea;
+}
+
+th {
+    background-color: #4CAF50;
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+td {
+    font-size: 14px;
+    color: #555;
+}
+
+tr:hover {
+    background-color: #f2f2f2;
+}
+
+/* Styling for links */
+a {
+    display: inline-block;
+    margin-top: 20px;
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+/* Styling for the Portfolio page */
+
+/* Styling for the table container */
+#portfolio {
+    width: 80%;
+    max-width: 900px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Styling for the Manage Stocks page */
+
+/* Styling for the table container */
+#tickersTable {
+    width: 80%;
+    max-width: 900px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    border-collapse: collapse;
+}
+
+/* Styling for input fields and buttons */
+input[type="number"],
+select {
+    padding: 8px;
+    width: 80px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.admin-select {
+    width: auto !important;
+}
+
+button {
+    padding: 8px 12px;
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.admin-btn {
+    text-align: center !important;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Styling for links */
+a {
+    display: inline-block;
+    margin-top: 20px;
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+/* Styling for graph */
+.chart-container {
+    width: 80%;
+    max-width: 800px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.portfolio-title {
+    padding-top: 1rem !important;
+}

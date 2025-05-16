@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Stock Trading Dashboard</h1>
+        </header>
+        <div class="user_profile">
+            <h2>Welcome, <%= names %>
+            </h2>
+            <form action="/player/logout" method="get">
+                <button type="submit" class="btn btn_red">Logout</button>
+            </form>
+        </div>
+
+        <!-- Portfolio Section -->
+        <h2>Your Portfolios</h2>
+        <section class="section-card transactions">
+            <table>
+                <thead>
+                    <tr>
+                      <th scope="col">Name</th>
+                      <th scope="col">Mode</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Created At</th>
+                      <th scope="col">Funds</th>
+                      <th scope="col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% for (var i = 0; i < portfolios.length; i++) { %>
+                        <tr>
+                            <td><%= portfolios[i].name %></td>
+                            <% if(portfolios[i].challenge_mode){ %>
+                                <td>Challenge Mode</td>
+                            <% } else{ %>
+                                <td>Normal Game</td>
+                            <% } %>
+                            <td><%= portfolios[i].availability %></td>
+                            <td><%= portfolios[i].createdAt %></td>
+                            <td><% var num=(portfolios[i].funds * 1).toFixed(2) %>
+                                $<%= num %></td>
+                            <td><a href="/portfolio/view/<%= portfolios[i].id %>">View</a></td>
+                        </tr>
+                    <% } %>
+                  </tbody>
+            </table>
+        </section>
+    </div>
+</body>
+
+</html>

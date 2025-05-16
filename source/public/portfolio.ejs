@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="dashboard-container">
+    <header>
+      <h1>
+        <%= portfolio.name %>
+      </h1>
+    </header>
+    <div class="user_profile">
+      <h2>Welcome, <%= names %>
+      </h2>
+      <form action="/player/logout" method="get">
+        <button type="submit" class="btn btn_red">Logout</button>
+      </form>
+    </div>
+
+    <!-- Information section -->
+    <section class="section-card trade">
+      <p>Available funds:
+      <p id="portfolio_funds"><% var num = (portfolio.funds * 1).toFixed(2) %>
+        $<%= num %>
+      </p>
+      </p>
+      <p>
+        <%= availability %>
+      </p>
+      <br>
+      <% if(stocks.length==0){ %>
+        <h2>You currently don't have any stocks yet</h2>
+        <br>
+        <% } else{ %>
+          <table>
+            <h2>Your current stocks</h2>
+            <thead>
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Value At Purchase</th>
+                <th scope="col">Market Value</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <% for (var i=0; i < stocks.length; i++) { %>
+                <tr id="<%= stocks[i].id %>">
+                  <td>
+                    <%= stocks[i].symbol %>
+                  </td>
+                  <td>
+                    <%= stocks[i].name %>
+                  </td>
+                  <td>
+                    <%= stocks[i].type %>
+                  </td>
+                  <td>
+                    <%= stocks[i].quantity %>
+                  </td>
+                  <td>
+                    <% var num = (stocks[i].valueAtPurchase * 1).toFixed(2) %>
+                    $<%= num %>
+                  </td>
+                  <td class="<%= stocks[i].symbol %>_value">$0.00</td>
+                  <td>
+                    <button onclick="submitAction('<%= stocks[i].id %>', '<%= stocks[i].symbol %>')">Sell</button>
+                  </td>
+                </tr>
+                <% } %>
+            </tbody>
+          </table>
+          <br>
+          <% } %>
+
+            <% if(past_stocks.length!=0){ %>
+              <table>
+                <h2>Past stocks</h2>
+                <thead>
+                  <tr>
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Bought At</th>
+                    <th scope="col">Sold At</th>
+                    <th scope="col">Profit</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody_PastStocks">
+                  <% for (var i=0; i < past_stocks.length; i++) { %>
+                    <tr>
+                      <td>
+                        <%= past_stocks[i].symbol %>
+                      </td>
+                      <td>
+                        <%= past_stocks[i].name %>
+                      </td>
+                      <td>
+                        <%= past_stocks[i].type %>
+                      </td>
+                      <td>
+                        <%= past_stocks[i].quantity %>
+                      </td>
+                      <td>
+                        <% var num = (past_stocks[i].valueAtPurchase * 1).toFixed(2) %>
+                        $<%= num %>
+                      </td>
+                      <td>
+                        <% var num = (past_stocks[i].valueSold * 1).toFixed(2) %>
+                        $<%= num %>
+                      </td>
+                      <td>
+                        <% var num=((past_stocks[i].valueSold - past_stocks[i].valueAtPurchase) *
+                          past_stocks[i].quantity).toFixed(2) %>
+                          $<%= num %>
+                      </td>
+                    </tr>
+                    <% } %>
+                </tbody>
+              </table>
+              <br>
+              <% } %>
+
+            <div id="portfolio-summary">
+                <form action="/portfolio/buyStocks/" method="get">
+                    <button type="submit" name="portfolioId" value="<%= portfolio.id %>" class="btn-link">Buy Stocks</button>
+                </form>
+            </div>
+        </section>
+        <p style="text-align: center; font-size: 18px; font-weight: bold; color: #ff4500;">
+          ⭐ Don't forget to sell your stocks before the deadline! ⭐
+      </p>
+      <h2 class="portfolio-title"><%= portfolio.name %> Performance</h2>
+      <canvas id="portfolioChart" width="400" height="200"></canvas>
+  
+      <script src="/chart.js"></script>
+      <a href="/player/dashboard">Return to Dashboard</a>      
+    </div>
+</body>
+
+<script>
+  /**
+   * Submits a buy or sell request for a specific stock ticker.
+   * The function retrieves quantity and action type, creates a request body, and
+   * sends a POST request to the server to complete the transaction.
+   * 
+   * @async
+   * @function submitAction
+   * @param {string} symbol - The stock symbol for the transaction.
+   * @param {string} name - The stock name for the transaction.
+   * @param {string} type - The stock type for the transaction.
+   * @param {number} price - The current price of the stock.
+   * @returns {Promise<void>} - Shows an alert on success or failure and reloads tickers.
+   */
+  async function submitAction(stock_id, symbol) {
+    try {
+      var marketValue = document.getElementsByClassName(symbol + "_value")[0]; // The market value is the same
+      const requestBody = {
+        stockId: stock_id,
+        marketValue: marketValue.innerHTML,
+      };
+
+      // Determine endpoint based on action type
+      const response = await fetch('/api/transactions/sell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const tableRow = document.getElementById(stock_id).remove();
+        const portfolioFunds = document.getElementById('portfolio_funds');
+        portfolioFunds.innerHTML = "$" + (data.newFunds * 1).toFixed(2);
+        const tableRowPastStocks = document.getElementById('tableBody_PastStocks');
+        const row = document.createElement('tr');
+        const stockSold = data.stockSold;
+        const soldPrice = data.marketValue; // data.stockSold.valueSold is 0 here but has value in the database;
+        var profit = ((soldPrice - data.stockSold.valueAtPurchase) * data.stockSold.quantity).toFixed(2);
+
+        row.innerHTML = `
+  <td>${stockSold.symbol}</td>
+  <td>${stockSold.name}</td>
+  <td>${stockSold.type}</td>
+  <td>${stockSold.quantity}</td>
+  <td>$${parseFloat(stockSold.valueAtPurchase).toFixed(2)}</td>
+  <td>$${parseFloat(soldPrice).toFixed(2)}</td>
+  <td>$${profit}</td>`;
+        tableRowPastStocks.appendChild(row);
+      } else {
+        window.location.reload();
+      }
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  }
+
+  if ("<%= portfolio.challenge_mode %>" === "true") {
+    if ("<%= stocks.length %>" !== "0") { // Too expensive to be called if the table is empty
+      /**
+     * Fetches stock tickers from the server and populates the table with stock data.
+     * Each row includes stock details, an input for quantity, a select for action (buy/sell),
+     * and a submit button to perform the chosen action.
+     * 
+     * @async
+     * @function loadTickers
+     * @returns {Promise<void>} - Fills the table with ticker information or logs an error.
+     */
+      async function loadTickers(date) {
+        var dateTime = new Date("January 2, 2023 00:00:00"); // Starting date ("2 years ago")
+        dateTime.setDate(date);
+        dateTime = dateTime.toISOString().split('T')[0];
+        try {
+          const response = await fetch('/portfolio/getHistoricalValue/', {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ "date": dateTime }),
+          }); // Fetch historical from API endpoint
+          if (!response.ok) throw new Error('Failed to load stock tickers');
+
+          const tickers = await response.json();
+
+          tickers.forEach(ticker => {
+            try {
+              var tableClass = document.getElementsByClassName(ticker.symbol + '_value');
+              for (var item in tableClass) {
+                var tableItem = tableClass[item];
+                tableItem.innerHTML = "$" + (ticker.currentValue * 1).toFixed(2);
+              }
+            } catch (error) {
+            }
+          });
+        } catch (error) {
+          console.log(`Error loading tickers: ${error.message}`);
+        }
+      }
+
+      // Load tickers when the page loads
+      window.onload = loadTickers(1);
+      var date = 1;
+
+      function increment() {
+        date++;
+        loadTickers(date)
+      }
+
+      setInterval(increment, 1000); // Changed to 1 seconds for quicker refresh
+    }
+  } else {
+    if ("<%= stocks.length %>" !== "0") {
+      /**
+     * Fetches stock tickers from the server and populates the table with stock data.
+     * Each row includes stock details, an input for quantity, a select for action (buy/sell),
+     * and a submit button to perform the chosen action.
+     * 
+     * @async
+     * @function loadTickers
+     * @returns {Promise<void>} - Fills the table with ticker information or logs an error.
+     */
+      async function loadTickers() {
+        try {
+          const response = await fetch('/api/tickers'); // Fetch stock tickers from API endpoint
+          if (!response.ok) throw new Error('Failed to load stock tickers');
+
+          const tickers = await response.json();
+
+          tickers.forEach(ticker => {
+            try {
+              var tableClass = document.getElementsByClassName(ticker.symbol + '_value');
+              for (var item in tableClass) {
+                var tableItem = tableClass[item];
+                tableItem.innerHTML = "$" + (ticker.currentValue * 1).toFixed(2);
+              }
+            } catch (error) {
+            }
+          });
+        } catch (error) {
+          console.log(`Error loading tickers: ${error.message}`);
+        }
+      }
+      // Load tickers when the page loads
+      window.onload = loadTickers;
+
+      // Set up auto-refresh every 10 seconds
+      setInterval(loadTickers, 10000);
+    }
+  }
+</script>
+
+</html>

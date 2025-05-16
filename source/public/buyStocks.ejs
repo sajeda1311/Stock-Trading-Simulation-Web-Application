@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Stocks</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+  <div class="manage_stocks_container">
+    <% if(portfolio.challenge_mode){ %>
+      <h2>Manage Stocks (Challenge Mode)</h2>
+      <% } else{ %>
+        <h2>Manage Stocks</h2>
+        <% } %>
+          <h3>Available Funds:<p id="portfolio_funds">$ <%= portfolio.funds %>
+            </p>
+          </h3>
+          <table id="tickersTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Current Value</th>
+                <th>Quantity</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <% for (var i=0; i < stockData.length; i++) { %>
+                <tr>
+                  <td>
+                    <%= stockData[i].symbol %>
+                  </td>
+                  <td>
+                    <%= stockData[i].name %>
+                  </td>
+                  <td>
+                    <%= stockData[i].type %>
+                  </td>
+                  <td id="<%= stockData[i].symbol %>_value">$0.00</td>
+                  <td><input type="number" min="1" value="1" id="quantity-<%= stockData[i].symbol %>"></td>
+                  <td>
+                    <button
+                      onclick="submitAction('<%= stockData[i].symbol %>', '<%= stockData[i].name %>', '<%= stockData[i].type %>')">Buy</button>
+                  </td>
+                </tr>
+                <% } %>
+            </tbody>
+          </table>
+
+          <script>
+            /**
+             * Submits a buy or sell request for a specific stock ticker.
+             * The function retrieves quantity and action type, creates a request body, and
+             * sends a POST request to the server to complete the transaction.
+             * 
+             * @async
+             * @function submitAction
+             * @param {string} symbol - The stock symbol for the transaction.
+             * @param {string} name - The stock name for the transaction.
+             * @param {string} type - The stock type for the transaction.
+             * @param {number} price - The current price of the stock.
+             * @returns {Promise<void>} - Shows an alert on success or failure and reloads tickers.
+             */
+              async function submitAction(symbol, name, type) {
+              try {
+                const quantity = document.getElementById(`quantity-${symbol}`);
+                const portfolioID = "<%= portfolio.id %>"; // Replace with actual user ID from your session
+                const userId = "<%= username %>"; // Replace with actual user ID from your session
+                const price = document.getElementById(`${symbol}_value`).innerHTML;
+
+                const requestBody = {
+                  portfolioID,
+                  stockSymbol: symbol,
+                  stockName: name,
+                  stockType: type,
+                  quantity: parseInt(quantity.value),
+                  price: price,  // Send current price to the backend
+                };
+
+                // Determine endpoint based on action type
+                const response = await fetch('/api/transactions/buy', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(requestBody),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                  quantity.value = 1;
+                  const portfolioFunds = document.getElementById('portfolio_funds');
+                  portfolioFunds.innerHTML = "$" + (data.newFunds * 1).toFixed(2);
+                } else {
+                  quantity.value = 1;
+                  throw new Error(data.message);
+                }
+              } catch (error) {
+                alert(`Error: ${error.message}`);
+              }
+            }
+
+            if ("<%= portfolio.challenge_mode %>" === "true") {
+              /**
+               * Fetches stock tickers from the server and populates the table with stock data.
+               * This is the Challenge mode, so it will fetch data from "January 2, 2023 00:00:00" onward (about 2 years to today)
+               * @async
+               * @function loadTickers
+               * @returns {Promise<void>} - Fills the table with ticker information or logs an error.
+               */
+              async function loadTickers(date) {
+                var dateTime = new Date("January 2, 2023 00:00:00"); // Starting date ("2 years ago")
+                dateTime.setDate(date);
+                dateTime = dateTime.toISOString().split('T')[0];
+                try {
+                  const response = await fetch('/portfolio/getHistoricalValue/', {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "date": dateTime }),
+                  }); // Fetch historical from API endpoint
+                  if (!response.ok) throw new Error('Failed to load stock tickers');
+
+                  const tickers = await response.json();
+
+                  tickers.forEach(ticker => {
+                    var tableItem = document.getElementById(ticker.symbol + '_value');
+                    tableItem.innerHTML = "$" + (ticker.currentValue * 1).toFixed(2);
+                  });
+                } catch (error) {
+                  console.log(`Error loading tickers: ${error.message}`);
+                }
+              }
+
+              // Load tickers when the page loads
+              window.onload = loadTickers(1);
+              var date = 1;
+
+              function increment() {
+                date++;
+                loadTickers(date)
+              }
+              // Set up auto-refresh every 0.5 seconds
+              setInterval(increment, 500); // Changed to 0.5 seconds for quicker refresh
+            } else {
+              /**
+              * Fetches stock tickers from the server and populates the table with stock data.
+              * Each row includes stock details, an input for quantity, a select for action (buy/sell),
+              * and a submit button to perform the chosen action.
+              * 
+              * @async
+              * @function loadTickers
+              * @returns {Promise<void>} - Fills the table with ticker information or logs an error.
+              */
+              async function loadTickers() {
+                try {
+                  const response = await fetch('/api/tickers'); // Fetch stock tickers from API endpoint
+                  if (!response.ok) throw new Error('Failed to load stock tickers');
+
+                  const tickers = await response.json();
+
+                  tickers.forEach(ticker => {
+                    var tableItem = document.getElementById(ticker.symbol + '_value');
+                    tableItem.innerHTML = "$" + (ticker.currentValue * 1).toFixed(2);
+                  });
+                } catch (error) {
+                  console.log(`Error loading tickers: ${error.message}`);
+                }
+              }
+              
+              window.onload = loadTickers;
+              setInterval(loadTickers, 3000); // Changed to 3 seconds for quicker refresh
+            }
+          </script>
+
+          <a href="/portfolio/view/<%= portfolio.id %>/">Back to Portfolio</a>
+  </div>
+
+</body>
+
+</html>

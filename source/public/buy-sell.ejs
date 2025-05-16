@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Stocks</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+  <div class="manage_stocks_container">
+    <h2>Manage Stocks</h2>
+    <table id="tickersTable">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Current Value</th>
+          <th>Quantity</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Data rows will be inserted here -->
+      </tbody>
+    </table>
+
+    <script>
+      /**
+       * Fetches stock tickers from the server and populates the table with stock data.
+       * Each row includes stock details, an input for quantity, a select for action (buy/sell),
+       * and a submit button to perform the chosen action.
+       * 
+       * @async
+       * @function loadTickers
+       * @returns {Promise<void>} - Fills the table with ticker information or logs an error.
+       */
+      async function loadTickers() {
+        try {
+          const response = await fetch('/api/tickers'); // Fetch stock tickers from API endpoint
+          if (!response.ok) throw new Error('Failed to load stock tickers');
+
+          const tickers = await response.json();
+          const tableBody = document.getElementById('tableBody');
+          tableBody.innerHTML = ''; // Clear existing rows
+
+          tickers.forEach(ticker => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+              <td>${ticker.symbol}</td>
+              <td>${ticker.name}</td>
+              <td>${ticker.type}</td>
+              <td>$${parseFloat(ticker.currentValue).toFixed(2)}</td>
+              <td><input type="number" min="1" value="1" id="quantity-${ticker.symbol}"></td>
+              <td>
+                <select id="action-${ticker.symbol}">
+                  <option value="buy">Buy</option>
+                  <option value="sell">Sell</option>
+                </select>
+                <button onclick="submitAction('${ticker.symbol}', ${ticker.currentValue})">Submit</button>
+              </td>
+            `;
+
+            tableBody.appendChild(row);
+          });
+        } catch (error) {
+          alert(`Error loading tickers: ${error.message}`);
+        }
+      }
+
+      /**
+       * Submits a buy or sell request for a specific stock ticker.
+       * The function retrieves quantity and action type, creates a request body, and
+       * sends a POST request to the server to complete the transaction.
+       * 
+       * @async
+       * @function submitAction
+       * @param {string} symbol - The stock symbol for the transaction.
+       * @param {number} price - The current price of the stock.
+       * @returns {Promise<void>} - Shows an alert on success or failure and reloads tickers.
+       */
+      async function submitAction(symbol, price) {
+        try {
+          const quantity = document.getElementById(`quantity-${symbol}`).value;
+          const action = document.getElementById(`action-${symbol}`).value;
+          const userId = "<%= username %>"; // Replace with actual user ID from your session
+
+          const requestBody = {
+            userId,
+            stockSymbol: symbol,
+            quantity: parseInt(quantity),
+            price: price  // Send current price to the backend
+          };
+
+          // Determine endpoint based on action type
+          const endpoint = action === 'buy' ? '/api/transactions/buy' : '/api/transactions/sell';
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action successful: ${data.message}`);
+            loadTickers(); // Reload tickers after action
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+        }
+      }
+
+      // Load tickers when the page loads
+      window.onload = loadTickers;
+
+      // Set up auto-refresh every 10 seconds
+      setInterval(loadTickers, 10000); // Changed to 10 seconds for quicker refresh
+    </script>
+
+    <a href="/player/dashboard">Back to Dashboard</a>
+  </div>
+
+</body>
+
+</html>
