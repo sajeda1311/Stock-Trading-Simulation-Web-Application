@@ -132,7 +132,7 @@ app.get('/portfolio', (req, res) => {
 });
 
 // API Key for fetching stock tickers from Polygon.io API
-const API_KEY = 'eegavq5RrAwcZEvx4E__WGfRTMT7jOcc';
+const API_KEY = '';
 
 /**
  * Endpoint to fetch stock tickers and their current values.
