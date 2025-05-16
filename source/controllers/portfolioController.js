@@ -5,7 +5,7 @@ import transactionService from '../models/transaction.js'; // Assuming transacti
 import { getAvailability } from '../utils/controller-utils.js';
 import axios from "axios";
 
-const API_KEY = 'eegavq5RrAwcZEvx4E__WGfRTMT7jOcc';
+const API_KEY = '';
 const tickersList = await getAllStockData();
 
 /**
